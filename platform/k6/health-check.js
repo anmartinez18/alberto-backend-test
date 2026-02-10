@@ -22,10 +22,14 @@ export default function () {
   const res = http.post(`${BASE_URL}/v1/notify`, payload, { headers: HEADERS });
 
   check(res, {
-    'Mock is responding': (r) => [200, 429, 500].includes(r.status),
-    'Mock logic is active': (r) => {
-      const body = JSON.parse(r.body);
-      return body.provider_id !== undefined || body.error !== undefined;
+    'Provider is responding': (r) => [200, 429, 500].includes(r.status),
+    'Provider logic is active': (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return body.provider_id !== undefined || body.error !== undefined;
+      } catch (e) {
+        return false;
+      }
     },
   });
 

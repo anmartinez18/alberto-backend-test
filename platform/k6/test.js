@@ -26,11 +26,19 @@ export default function () {
   
   check(createRes, {
     'create status is 201 or 200': (r) => r.status === 201 || r.status === 200,
-    'id is present': (r) => JSON.parse(r.body).id !== undefined,
+    'id is present in response': (r) => {
+      try { return JSON.parse(r.body).id !== undefined; }
+      catch (e) { return false; }
+    },
   });
 
   if (createRes.status === 201 || createRes.status === 200) {
-    let id = JSON.parse(createRes.body).id;
+    let id;
+    try {
+      id = JSON.parse(createRes.body).id;
+    } catch (e) {
+      return;
+    }
 
     let processRes = http.post(`${BASE_URL}/v1/requests/${id}/process`);
     check(processRes, {
@@ -41,7 +49,14 @@ export default function () {
     let statusRes = http.get(`${BASE_URL}/v1/requests/${id}`);
     check(statusRes, {
       'status is retrieved': (r) => r.status === 200,
-      'status is valid': (r) => ['queued', 'processing', 'sent', 'failed'].includes(JSON.parse(r.body).status),
+      'status body is valid json': (r) => {
+        try { JSON.parse(r.body); return true; }
+        catch (e) { return false; }
+      },
+      'status value is valid': (r) => {
+        try { return ['queued', 'processing', 'sent', 'failed'].includes(JSON.parse(r.body).status); }
+        catch (e) { return false; }
+      },
     });
   }
 
